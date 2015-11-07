@@ -1,0 +1,5 @@
+[package]
+
+name = "ihoover"
+version = "1.0.0"
+authors = [ "Clement Lardeur <clem.lardeur@gmail.com>" ]
