@@ -19,18 +19,35 @@ pub struct Position {
 
 #[derive(PartialEq, Debug)]
 pub enum Orientation {
-    NORD, EST, SUD, WEST
+    Nord, Est, Sud, West
 }
 
 impl FromStr for Orientation {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "N" => Ok(Orientation::NORD),
-            "E" => Ok(Orientation::EST),
-            "S" => Ok(Orientation::SUD),
-            "W" => Ok(Orientation::WEST),
+            "N" => Ok(Orientation::Nord),
+            "E" => Ok(Orientation::Est),
+            "S" => Ok(Orientation::Sud),
+            "W" => Ok(Orientation::West),
             _   => Err(format!("failed to parse orientation <{}>", s))
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub enum Command {
+    Forward, RotateLeft, RotateRight
+}
+
+impl FromStr for Command {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "A" => Ok(Command::Forward),
+            "D" => Ok(Command::RotateRight),
+            "G" => Ok(Command::RotateLeft),
+            _   => Err(format!("failed to parse command <{}>", s))
         }
     }
 }
@@ -41,8 +58,10 @@ pub fn parse_file(path: &Path) {
     let mut lines = reader.lines().map(|result| result.expect("Error reading lines"));
     let grid = parse_grid(&lines.next().expect("No grid input line"));
     let pos = parse_position(&lines.next().expect("No position input line"));
+    let commands = parse_commands(&lines.next().expect("No commands input line"));
     println!("{:?}", grid);
     println!("{:?}", pos);
+    println!("{:?}", commands);
 }
 
 pub fn parse_grid(line: &str) -> Grid {
@@ -75,6 +94,12 @@ pub fn parse_position(line: &str) -> Position {
                           .expect("Missing orientation input");
 
     return Position {x:x, y:y, orientation: orientation};
+}
+
+pub fn parse_commands(line: &str) -> Vec<Command> {
+    return line.chars()
+               .map(|c| c.to_string().parse().expect("Invalid command input"))
+               .collect();
 }
 
 #[cfg(test)]
@@ -113,8 +138,8 @@ mod test {
 
     #[test]
     fn should_parse_a_position() {
-        assert_eq!(Position {x:5, y:5, orientation: Orientation::NORD}, parse_position("5 5 N"));
-        assert_eq!(Position {x:8, y:1, orientation: Orientation::WEST}, parse_position("8 1 W"));
+        assert_eq!(Position {x:5, y:5, orientation: Orientation::Nord}, parse_position("5 5 N"));
+        assert_eq!(Position {x:8, y:1, orientation: Orientation::West}, parse_position("8 1 W"));
     }
 
     #[test]
@@ -140,4 +165,17 @@ mod test {
     fn should_failed_to_parse_a_position_when_orientation_is_invalid() {
         parse_position("10 10 X");
     }
+
+    #[test]
+    fn should_parse_commands() {
+        assert_eq!(vec![Command::Forward, Command::RotateLeft, Command::RotateRight], parse_commands("AGD"));
+        assert_eq!(vec![Command::Forward, Command::Forward], parse_commands("AA"));
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid command input: \"failed to parse command <X>\"")]
+    fn should_failed_to_parse_commands_when_a_command_is_invalid() {
+        parse_commands("X");
+    }
+
 }
