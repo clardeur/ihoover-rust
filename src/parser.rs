@@ -2,69 +2,29 @@ use std::io::BufReader;
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
-use std::str::FromStr;
+
+use model::Grid;
+use model::Position;
+use model::Command;
 
 #[derive(PartialEq, Debug)]
-pub struct Grid {
-    x: u8,
-    y: u8
+pub struct ParsingResult {
+    grid: Grid,
+    position: Position,
+    commands: Vec<Command>
 }
 
-#[derive(PartialEq, Debug)]
-pub struct Position {
-    x: u8,
-    y: u8,
-    orientation: Orientation
-}
-
-#[derive(PartialEq, Debug)]
-pub enum Orientation {
-    Nord, Est, Sud, West
-}
-
-impl FromStr for Orientation {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "N" => Ok(Orientation::Nord),
-            "E" => Ok(Orientation::Est),
-            "S" => Ok(Orientation::Sud),
-            "W" => Ok(Orientation::West),
-            _   => Err(format!("failed to parse orientation <{}>", s))
-        }
-    }
-}
-
-#[derive(PartialEq, Debug)]
-pub enum Command {
-    Forward, RotateLeft, RotateRight
-}
-
-impl FromStr for Command {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "A" => Ok(Command::Forward),
-            "D" => Ok(Command::RotateRight),
-            "G" => Ok(Command::RotateLeft),
-            _   => Err(format!("failed to parse command <{}>", s))
-        }
-    }
-}
-
-pub fn parse_file(path: &Path) {
+pub fn parse_file(path: &Path) -> ParsingResult {
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
     let mut lines = reader.lines().map(|result| result.expect("Error reading lines"));
     let grid = parse_grid(&lines.next().expect("No grid input line"));
-    let pos = parse_position(&lines.next().expect("No position input line"));
+    let position = parse_position(&lines.next().expect("No position input line"));
     let commands = parse_commands(&lines.next().expect("No commands input line"));
-    println!("{:?}", grid);
-    println!("{:?}", pos);
-    println!("{:?}", commands);
+    ParsingResult {grid: grid, position: position, commands: commands}
 }
 
-pub fn parse_grid(line: &str) -> Grid {
+fn parse_grid(line: &str) -> Grid {
     let mut iter = line.split_whitespace();
 
     let x = iter.next()
@@ -75,10 +35,10 @@ pub fn parse_grid(line: &str) -> Grid {
                 .map(|n| n.parse().expect("Invalid (y) grid input"))
                 .expect("Missing (y) grid input");
 
-    return Grid {x:x, y:y};
+    Grid::new(x, y)
 }
 
-pub fn parse_position(line: &str) -> Position {
+fn parse_position(line: &str) -> Position {
     let mut iter = line.split_whitespace();
 
     let x = iter.next()
@@ -93,23 +53,24 @@ pub fn parse_position(line: &str) -> Position {
                           .map(|o| o.parse().expect("Invalid orientation input"))
                           .expect("Missing orientation input");
 
-    return Position {x:x, y:y, orientation: orientation};
+    Position::new(x, y, orientation)
 }
 
-pub fn parse_commands(line: &str) -> Vec<Command> {
-    return line.chars()
-               .map(|c| c.to_string().parse().expect("Invalid command input"))
-               .collect();
+fn parse_commands(line: &str) -> Vec<Command> {
+    line.chars()
+        .map(|c| c.to_string().parse().expect("Invalid command input"))
+        .collect()
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use super::model::*;
 
     #[test]
     fn should_parse_a_grid() {
-        assert_eq!(Grid {x:10, y:10}, parse_grid("10 10"));
-        assert_eq!(Grid {x:0, y:5}, parse_grid("0 5"));
+        assert_eq!(Grid::new(10 ,10), parse_grid("10 10"));
+        assert_eq!(Grid::new(0, 5), parse_grid("0 5"));
     }
 
     #[test]
@@ -138,8 +99,8 @@ mod test {
 
     #[test]
     fn should_parse_a_position() {
-        assert_eq!(Position {x:5, y:5, orientation: Orientation::Nord}, parse_position("5 5 N"));
-        assert_eq!(Position {x:8, y:1, orientation: Orientation::West}, parse_position("8 1 W"));
+        assert_eq!(Position::new(5, 5, Orientation::Nord), parse_position("5 5 N"));
+        assert_eq!(Position::new(8, 1, Orientation::West), parse_position("8 1 W"));
     }
 
     #[test]
