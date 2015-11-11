@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn should_parse_a_position() {
-        assert_eq!(Position::new(5, 5, Orientation::Nord), parser::parse_position("5 5 N"));
+        assert_eq!(Position::new(5, 5, Orientation::North), parser::parse_position("5 5 N"));
         assert_eq!(Position::new(8, 1, Orientation::West), parser::parse_position("8 1 W"));
     }
 
@@ -138,5 +138,4 @@ mod tests {
     fn should_failed_to_parse_commands_when_a_command_is_invalid() {
         parser::parse_commands("X");
     }
-
 }
