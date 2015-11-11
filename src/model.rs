@@ -63,3 +63,32 @@ impl FromStr for Command {
         }
     }
 }
+
+// Hoover
+#[derive(PartialEq, Debug)]
+pub struct Hoover {
+    grid: Grid,
+    position: Position
+}
+
+impl Hoover {
+    pub fn new(grid: Grid, position: Position) -> Hoover {
+        Hoover {grid: grid, position: position}
+    }
+
+    pub fn execute (&self, cmd: &Command) {
+        match *cmd {
+            Command::RotateLeft => self.rotate(-90),
+            Command::RotateRight => self.rotate(90),
+            Command::Forward => self.forward()
+        }
+    }
+
+    fn rotate(&self, degree: i8) {
+        unimplemented!()
+    }
+
+    fn forward(&self) {
+        unimplemented!()
+    }
+}

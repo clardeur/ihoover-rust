@@ -1,9 +1,14 @@
+extern crate itertools;
+
+use itertools::Itertools;
+use model::Hoover;
 use std::path::Path;
 
-mod model;
 mod parser;
+mod model;
 
 fn main() {
-    let parsing_result = parser::parse_file(Path::new("E:\\Workspace\\ihoover-rust\\data\\input.txt"));
-    println!("{:?}", parsing_result);
+    let input = parser::parse_file(Path::new("E:\\Workspace\\ihoover-rust\\data\\input.txt"));
+    let hoover = Hoover::new(input.grid, input.position);
+    input.commands.iter().foreach(|cmd| hoover.execute(cmd));
 }
